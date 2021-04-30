@@ -9,4 +9,4 @@ Angus Yick and Joe Ikedo
 
 ## Part 2:
 
-https://github.com/angusyick/github-actions-for-ci
+https://github.com/joeikedo/github-actions-for-ci/issues/7
