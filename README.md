@@ -9,4 +9,4 @@ Angus Yick and Joe Ikedo
 
 ## Part 2:
 
-LINK TO YOUR PART 2 REPOSITORY
+https://github.com/angusyick/github-actions-for-ci
