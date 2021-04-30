@@ -1,9 +1,7 @@
 # CSE110 SP21 Lab 5
 
 ## Author(s):
-Angus Yick
-
-Joe Ikedo
+Angus Yick and Joe Ikedo
 
 ## Part 1:
 
