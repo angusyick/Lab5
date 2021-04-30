@@ -2,14 +2,164 @@
 
 const img = new Image(); // used to load image from <input> and draw to canvas
 
+//initialize canvas
+const canvas = document.getElementById('user-image');
+const ctx = canvas.getContext('2d');
+
+//initialize buttons
+var submit = document.querySelector("[type='submit']");
+var clear = document.querySelector("[type='reset']");
+var readText = document.querySelector("[type='button']");
+var voiceSel = document.getElementById('voice-selection');
+
+//find path of img source
+const input = document.querySelector('#image-input');
+const log = document.getElementById('values');
+input.addEventListener('input', updateValue);
+function updateValue(e) {
+  var file = document.getElementById("#image-input");
+  img.src = URL.createObjectURL(this.files[0]);
+}
+
 // Fires whenever the img object loads a new image (such as with img.src =)
 img.addEventListener('load', () => {
-  // TODO
 
-  // Some helpful tips:
-  // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
-  // - Clear the form when a new image is selected
-  // - If you draw the image to canvas here, it will update as soon as a new image is selected
+  //clear form
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  //fill canvas with black
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  //gets parameters for meme image
+  var imgObj = getDimensions(canvas.width, canvas.height, img.width, img.height);
+
+  //displays meme image
+  ctx.drawImage(img, imgObj.startX, imgObj.startY, imgObj.width, imgObj.height);
+
+  //toggle buttons
+  submit.disabled = false;
+  clear.disabled = true;
+  readText.disabled = true;
+  voiceSel.disabled = true;
+});
+
+var topText;
+var botText;
+
+//when generate is clicked:
+submit.addEventListener('click', () => {
+
+  //initialize text
+  topText = document.getElementById('text-top').value;
+  botText = document.getElementById('text-bottom').value;
+
+  //prevent page refreshing
+  event.preventDefault();
+
+  //format and place text
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'white';
+  ctx.font = '40px Impact';
+  ctx.fillText(topText, canvas.width/2, 40);
+  ctx.fillText(botText, canvas.width/2, canvas.height - 5);
+  ctx.strokeText(topText, canvas.width/2, 40);
+  ctx.strokeText(botText, canvas.width/2, canvas.height - 5);
+
+  //toggle buttons
+  submit.disabled = true;
+  clear.disabled = false;
+  readText.disabled = false;
+  voiceSel.disabled = false;
+});
+
+//when clear is clicked:
+clear.addEventListener('click', () => {
+
+  //clears canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  //toggles buttons
+  submit.disabled = false;
+  clear.disabled = true;
+  readText.disabled = true;
+  voiceSel.disabled = true;
+
+  //resets image
+  input.value = "";
+});
+
+var allVoices;
+
+//populate the voice list
+if(typeof speechSynthesis !== 'undefined') {
+  function populateVoiceList() {
+
+    //initializes the voice list
+    allVoices = speechSynthesis.getVoices();
+
+    //creates the voice options
+    for(var i = 0; i < allVoices.length; i++) {
+      var option = document.createElement('option');
+      option.textContent = allVoices[i].name + ' (' + allVoices[i].lang + ')';
+
+      if(allVoices[i].default) {
+        option.textContent += ' -- DEFAULT';
+      }
+
+      option.setAttribute('data-lang', allVoices[i].lang);
+      option.setAttribute('data-name', allVoices[i].name);
+      voiceSel.appendChild(option);
+    }
+
+    //removes the none option
+    voiceSel.remove(0);
+  }
+
+  if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = populateVoiceList;
+  }
+}
+
+//when read text is clicked:
+readText.addEventListener('click', () => {
+
+  //initializes the utterance and selection
+  var utterance = new SpeechSynthesisUtterance(topText + " " + botText);
+  var selectedOption = voiceSel.selectedOptions[0].getAttribute('data-name');
+
+  //search for selection
+  for(var i = 0; i < allVoices.length ; i++) {
+    if(allVoices[i].name === selectedOption) {
+      utterance.voice = allVoices[i];
+    }
+  }
+
+  utterance.volume = volumeSetting;
+
+  //say words
+  speechSynthesis.speak(utterance);
+});
+
+var volumeSetting = 1;
+var volumeChoice = document.querySelector("[type='range']");
+var volumeIcon = document.querySelector("[src = 'icons/volume-level-3.svg']");
+
+volumeChoice.addEventListener('input', () => {
+    volumeSetting = volumeChoice.value / 100;
+
+    if(volumeChoice.value == 0){
+      volumeIcon.src="icons/volume-level-0.svg";
+    }
+    else if(volumeChoice.value >=1 && volumeChoice.value <= 33){
+      volumeIcon.src="icons/volume-level-1.svg";
+    }
+    else if(volumeChoice.value >=34 && volumeChoice.value <= 66 ){
+      volumeIcon.src="icons/volume-level-2.svg";
+    }
+    else if(volumeChoice.value >=67 && volumeChoice.value <= 100){
+      volumeIcon.src="icons/volume-level-3.svg";
+    }
 });
 
 /**
@@ -23,7 +173,7 @@ img.addEventListener('load', () => {
  * and also the starting X and starting Y coordinate to be used when you draw the new image to the
  * Canvas. These coordinates align with the top left of the image.
  */
-function getDimmensions(canvasWidth, canvasHeight, imageWidth, imageHeight) {
+function getDimensions(canvasWidth, canvasHeight, imageWidth, imageHeight) {
   let aspectRatio, height, width, startX, startY;
 
   // Get the aspect ratio, used so the picture always fits inside the canvas
